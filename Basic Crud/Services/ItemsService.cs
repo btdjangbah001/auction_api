@@ -7,12 +7,10 @@ namespace Basic_Crud.Services
     public class ItemsService
     {
         private readonly AppDBContext context;
-        private readonly IConfiguration configuration;
 
-        public ItemsService(AppDBContext context, IConfiguration configuration)
+        public ItemsService(AppDBContext context)
         {
             this.context = context;
-            this.configuration = configuration;
         }
 
         public async Task<List<Item>> GetAll()
@@ -20,9 +18,11 @@ namespace Basic_Crud.Services
             var items = context.Items.Select(q => new Item
             {
                 Id = q.Id,
+                Name = q.Name,
                 Owner = q.Owner,
                 Category = q.Category,
                 Description = q.Description,
+                Created = q.Created,
                 Sold = q.Sold,
                 Auctions = q.Auctions,
             });
@@ -68,7 +68,7 @@ namespace Basic_Crud.Services
                     Owner = user,
                     Category = category,
                     Description = itemDto.Description,
-                    Created = Timesta,
+                    Created = DateTime.UtcNow,
                 };
 
                 await context.Items.AddAsync(item);
