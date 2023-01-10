@@ -1,9 +1,7 @@
 ﻿using Basic_Crud.Models;
 using Basic_Crud.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Basic_Crud.Controllers
 {
@@ -22,26 +20,37 @@ namespace Basic_Crud.Controllers
         [HttpGet]
         public async Task<ActionResult<User>> GetUserDetails()
         {
-            var username = HttpContext.User.FindFirst(ClaimTypes.Name).Value;
+            var res = await service.GetUserDetails();
 
-            if (username == null) return Unauthorized("Could not verify token. Please log in again to perform this action!");
-
-            var user = await service.GetUserDetails(username);
-
-            if (user == null) return NotFound("Could not find this user, please log out and log in again");
-
-            return Ok(user);
+            return Response(res);
         }
 
         [HttpPut]
         public async Task<ActionResult<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
-            var username = HttpContext.User.FindFirst(ClaimTypes.Name).Value;
+            bool usernameAvailable = await service.IsUsernameAvailable(userUpdateDto.Username);
+            if (!usernameAvailable) return BadRequest("Username is not available.");
 
-            if (username == null) return Unauthorized("Could not verify token. Please log in again to perform this action!");
+            var res = await service.UpdateUser(userUpdateDto);
 
-            var user = await service.UpdateUser(userUpdateDto, username);
-            return Ok(user);
+            return Response(res);
+        }
+
+        [HttpPut]
+        public async Task<ActionResult<User>> UpdatePassword(UserUpdatePassowrd userUpdate)
+        {
+            var res = await service.UpdatePassword(userUpdate);
+
+            return Response(res);
+        }
+
+        private ActionResult<User> Response(Tuple<User?, bool> user)
+        {
+            if (user.Item2 == false) return Unauthorized("Could not verify token. Please log in again to perform this action!");
+
+            if (user.Item1 == null) return NotFound("User does not exist!");
+
+            return Ok(user.Item1);
         }
     }
 }

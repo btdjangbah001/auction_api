@@ -39,16 +39,11 @@ namespace Basic_Crud.Controllers
         [HttpPost]
         public async Task<ActionResult<Item>> CreateItem(ItemDto itemReq)
         {
-            string? username = HttpContext.User.FindFirst(ClaimTypes.Name).Value;
-
-            if (username == null) 
-                return BadRequest("Please make sure you are logged in before performing this action");
-
-            var res = await service.CreateItem(itemReq, username);
-
-            if (res == null) return BadRequest("Something went wrong, please try again.");
-            if (res.Item2 == false) return BadRequest("Please make sure you are logged in before performing this action");
-            if (res.Item3 == false) return BadRequest("Please make sure you have a valid category");
+            var res = await service.CreateItem(itemReq);
+            
+            if (res.Item4 == false) return Unauthorized("Please make sure you are logged in before performing this action");
+            if (res.Item2 == false) return NotFound("User does not exist!");
+            if (res.Item3 == false) return NotFound("Category does not exist!");
 
             return Ok(res.Item1);
         }

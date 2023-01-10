@@ -50,6 +50,8 @@ builder.Services.AddScoped<CategoriesService>();
 
 builder.Services.AddScoped<UsersService>();
 
+builder.Services.AddHttpContextAccessor();
+
 // Ignores cycles
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>

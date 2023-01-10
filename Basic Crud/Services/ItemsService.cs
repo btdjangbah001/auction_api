@@ -1,16 +1,19 @@
 ﻿using Basic_Crud.Data;
 using Basic_Crud.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Basic_Crud.Services
 {
     public class ItemsService
     {
         private readonly AppDBContext context;
+        private readonly IHttpContextAccessor httpContext;
 
-        public ItemsService(AppDBContext context)
+        public ItemsService(AppDBContext context, IHttpContextAccessor httpContext)
         {
             this.context = context;
+            this.httpContext = httpContext;
         }
 
         public async Task<List<Item>> GetAll()
@@ -35,9 +38,13 @@ namespace Basic_Crud.Services
             return await context.Items.FindAsync(id);
         }
 
-        public async Task<Tuple<Item?, bool, bool>?> CreateItem(ItemDto itemDto, string? loggedInUsername)
+        public async Task<Tuple<Item?, bool, bool, bool>?> CreateItem(ItemDto itemDto)
         {
-            if (loggedInUsername == null) return null;
+            string? loggedInUsername = null;
+
+            if (httpContext.HttpContext != null) loggedInUsername = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+
+            if (string.IsNullOrWhiteSpace(loggedInUsername)) return new Tuple<Item?, bool, bool, bool>(null, false, false, false);
 
             var user = await context.Users.Where(u => u.Username == loggedInUsername).FirstOrDefaultAsync();
 
@@ -75,7 +82,7 @@ namespace Basic_Crud.Services
                 await context.SaveChangesAsync();
             }
 
-            return new Tuple<Item?, bool, bool>(item, userExists, categoryExists);
+            return new Tuple<Item?, bool, bool, bool>(item, userExists, categoryExists, true);
         }
     }
 }

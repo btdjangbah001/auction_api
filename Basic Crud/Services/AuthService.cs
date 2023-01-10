@@ -75,7 +75,7 @@ namespace Basic_Crud.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        void CreatePassword(string password, out byte[] passwordSalt, out byte[] passwodHash)
+        public void CreatePassword(string password, out byte[] passwordSalt, out byte[] passwodHash)
         {
             using (var hmac = new HMACSHA512())
             {
