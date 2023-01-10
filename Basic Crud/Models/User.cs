@@ -10,6 +10,9 @@ namespace Basic_Crud.Models
         public string Email { get; set; }
         public byte[] PasswordHash { get; set; }
         public byte[] PasswordSalt { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime TokenCreated { get; set; }
+        public DateTime TokenExpires { get; set; }
         public ICollection<Item> Items { get; set; }
         public ICollection<Bid> Bids { get; set; }
     }

@@ -34,12 +34,19 @@ namespace Basic_Crud.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserLogin userLogin)
         {
-            var res = await auth.LoginUser(userLogin);
+            var res = await auth.LoginUser(userLogin, Response);
             
             if (res == null)
                 return BadRequest("Wrong username or password");
 
             return Ok(res);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<string>> RefreshToken()
+        {
+            var res = await auth.RefreshToken(Request, Response);
+            return Ok(string.Empty);
         }
     }
 }

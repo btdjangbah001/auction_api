@@ -101,7 +101,7 @@ namespace Basic_Crud.Services
             return user != null;
         }
 
-        private string? GetLoggedInUser()
+        public string? GetLoggedInUser()
         {
             string? username = null;
 

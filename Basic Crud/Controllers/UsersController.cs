@@ -25,7 +25,7 @@ namespace Basic_Crud.Controllers
             return Response(res);
         }
 
-        [HttpPut]
+        [HttpPut("update-details")]
         public async Task<ActionResult<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
             bool usernameAvailable = await service.IsUsernameAvailable(userUpdateDto.Username);
@@ -36,7 +36,7 @@ namespace Basic_Crud.Controllers
             return Response(res);
         }
 
-        [HttpPut]
+        [HttpPut("update-password")]
         public async Task<ActionResult<User>> UpdatePassword(UserUpdatePassowrd userUpdate)
         {
             var res = await service.UpdatePassword(userUpdate);
