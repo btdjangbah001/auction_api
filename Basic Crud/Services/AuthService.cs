@@ -15,12 +15,14 @@ namespace Basic_Crud.Services
         private readonly AppDBContext context;
         private readonly IConfiguration configuration;
         private readonly UsersService usersService;
+        private readonly UtilityService utilityService;
 
-        public AuthService(AppDBContext context, IConfiguration configuration, UsersService usersService)
+        public AuthService(AppDBContext context, IConfiguration configuration, UsersService usersService, UtilityService utilityService)
         {
             this.context = context;
             this.configuration = configuration;
             this.usersService = usersService;
+            this.utilityService = utilityService;
         }
 
         public async Task<User?> RegisterUser(UserDto userReq)
@@ -32,7 +34,7 @@ namespace Basic_Crud.Services
 
             var user = new User();
             
-            CreatePassword(userReq.Password, out byte[] salt, out byte[] hash);
+            utilityService.CreatePassword(userReq.Password, out byte[] salt, out byte[] hash);
 
             user.Username = userReq.Username;
             user.Email = userReq.Email;
@@ -64,7 +66,7 @@ namespace Basic_Crud.Services
         public async Task<Tuple<User?, bool, bool, bool, bool>> RefreshToken(HttpRequest request, HttpResponse response)
         {
             var refreshToken = request.Cookies["refreshToken"];
-            var username = usersService.GetLoggedInUser();
+            var username = utilityService.GetLoggedInUser();
             bool userIsLoggedIn = true;
             bool userExists = true;
             bool validToken = true;
@@ -120,15 +122,6 @@ namespace Basic_Crud.Services
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public void CreatePassword(string password, out byte[] passwordSalt, out byte[] passwodHash)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwodHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
         }
 
         bool VerifyPassword(string password, User user)

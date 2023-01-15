@@ -8,14 +8,12 @@ namespace Basic_Crud.Services
     public class UsersService
     {
         private readonly AppDBContext context;
-        private readonly IHttpContextAccessor httpContext;
-        private readonly AuthService authService;
+        private readonly UtilityService utilityService;
 
-        public UsersService(AppDBContext context, IHttpContextAccessor httpContext, AuthService authService)
+        public UsersService(AppDBContext context, UtilityService utilityService)
         {
             this.context = context;
-            this.httpContext = httpContext;
-            this.authService = authService;
+            this.utilityService = utilityService;
         }
 
         public async Task<Tuple<User?, bool>> GetUserDetails()
@@ -24,7 +22,7 @@ namespace Basic_Crud.Services
             bool userFound = true;
             User? user = null;
 
-            if (httpContext.HttpContext != null) username = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            username = utilityService.GetLoggedInUser();
 
             if (string.IsNullOrWhiteSpace(username)) userFound = false;
             else user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
@@ -38,7 +36,7 @@ namespace Basic_Crud.Services
             bool userFound = true;
             User? user = null;
 
-            if (httpContext.HttpContext != null) loggedInUser = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            loggedInUser = utilityService.GetLoggedInUser();
 
             if (string.IsNullOrWhiteSpace(loggedInUser)) userFound = false;
             else user =await context.Users.Where(u => u.Username == loggedInUser).FirstOrDefaultAsync();
@@ -62,7 +60,7 @@ namespace Basic_Crud.Services
             bool loggedInUser = true;
             User? user = null;
 
-            string? username = GetLoggedInUser();
+            string? username = utilityService.GetLoggedInUser();
 
             if (username == null) return new Tuple<User?, bool>(user, loggedInUser);
 
@@ -70,7 +68,7 @@ namespace Basic_Crud.Services
 
             if (user == null) return new Tuple<User?, bool>(user, loggedInUser);
 
-            authService.CreatePassword(updatePassowrd.Password, out byte[] salt, out byte[] hash);
+            utilityService.CreatePassword(updatePassowrd.Password, out byte[] salt, out byte[] hash);
 
             user.PasswordSalt = salt;
             user.PasswordHash = hash;
@@ -101,15 +99,30 @@ namespace Basic_Crud.Services
             return user != null;
         }
 
-        public string? GetLoggedInUser()
+        public async Task<Tuple<List<Item>?, bool, bool>> GetUserItems()
         {
-            string? username = null;
+            var userLoggedIn = true;
+            var userExists = true;
 
-            if (httpContext.HttpContext != null) username = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            var username = utilityService.GetLoggedInUser();
+            if (username == null)
+            {
+                userLoggedIn = false;
+                return new Tuple<List<Item>?, bool, bool>(null, userLoggedIn, false);
+            }
 
-            if (string.IsNullOrWhiteSpace(username)) return null;
+            var user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
+            if (user == null)
+            {
+                userExists = false;
+                return new Tuple<List<Item>?, bool, bool>(null, userLoggedIn, userExists);
+            }
 
-            else return username;
+            var item = await context.Items.Where(i => i.Owner == user).ToListAsync();
+
+            if (item == null) item = new List<Item> { };
+
+            return new Tuple<List<Item>?, bool, bool>(item, userLoggedIn, userExists);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Basic_Crud.Data;
 using Basic_Crud.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Basic_Crud.Services
 {
@@ -12,6 +13,11 @@ namespace Basic_Crud.Services
         {
             this.context = context;
             this.configuration = configuration;
+        }
+
+        public async Task<List<Category>> GetAllCategories()
+        {
+            return await context.Categories.ToListAsync();
         }
 
         public async Task<Category> CreateCategory(CategoryDto categoryDto)

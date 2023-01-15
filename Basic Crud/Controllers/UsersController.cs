@@ -52,5 +52,16 @@ namespace Basic_Crud.Controllers
 
             return Ok(user.Item1);
         }
+
+        [HttpGet("/items")]
+        public async Task<ActionResult<List<Category>>> GetUserItems()
+        {
+            var res = await service.GetUserItems();
+
+            if (res.Item2 == false) return Unauthorized("Please make sure you are logged in before performing this action!");
+            if (res.Item3 == false) return NotFound("User not found!");
+
+            return Ok(res.Item1);
+        }
     }
 }

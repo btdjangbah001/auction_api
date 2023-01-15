@@ -18,6 +18,12 @@ namespace Basic_Crud.Controllers
             this.service = service;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<List<Category>>> GetAllCategories()
+        {
+            return await service.GetAllCategories();
+        }
+
         [HttpPost]
         public async Task<ActionResult<Category>> CreateCategory(CategoryDto categoryDto)
         {

@@ -9,11 +9,13 @@ namespace Basic_Crud.Services
     {
         private readonly AppDBContext context;
         private readonly IHttpContextAccessor httpContext;
+        private readonly UtilityService utilityService;
 
-        public ItemsService(AppDBContext context, IHttpContextAccessor httpContext)
+        public ItemsService(AppDBContext context, IHttpContextAccessor httpContext, UtilityService utilityService)
         {
             this.context = context;
             this.httpContext = httpContext;
+            this.utilityService = utilityService;
         }
 
         public async Task<List<Item>> GetAll()
