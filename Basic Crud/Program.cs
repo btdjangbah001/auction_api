@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text.Json.Serialization;
 using System.Net;
+using Basic_Crud.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,8 @@ builder.Services.AddScoped<ItemsService>();
 builder.Services.AddScoped<CategoriesService>();
 
 builder.Services.AddScoped<UsersService>();
+
+builder.Services.AddScoped<AuctionController>();
 
 builder.Services.AddHttpContextAccessor();
 

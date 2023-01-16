@@ -1,7 +1,6 @@
 ﻿using Basic_Crud.Data;
 using Basic_Crud.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace Basic_Crud.Services
 {
