@@ -53,7 +53,9 @@ builder.Services.AddScoped<CategoriesService>();
 
 builder.Services.AddScoped<UsersService>();
 
-builder.Services.AddScoped<AuctionController>();
+builder.Services.AddScoped<AuctionService>();
+
+builder.Services.AddScoped<BidsService>();
 
 builder.Services.AddScoped<BidsService>();
 

@@ -7,36 +7,31 @@ namespace Basic_Crud.Services
     public class AuctionService
     {
         private readonly AppDBContext context;
+        private readonly UtilityService utilityService;
 
-        public AuctionService(AppDBContext context)
+        public AuctionService(AppDBContext context, UtilityService utilityService)
         {
             this.context = context;
+            this.utilityService = utilityService;
         }
 
-        public async Task<List<Auction>> GetAll()
+        public async Task<List<AuctionDto>> GetAll()
         {
-<<<<<<< Updated upstream
-            return await context.Auctions.ToListAsync();
-=======
             return await context.Auctions.Select(a => new AuctionDto
             {
                 Id = a.Id,
-                StartDate= a.StartDate,
-                EndDate= a.EndDate,
-                SoldDate= a.SoldDate,
-                Price= a.Price,
+                StartDate = a.StartDate,
+                EndDate = a.EndDate,
+                SoldDate = a.SoldDate,
+                Price = a.Price,
                 UserName = a.Winner != null ? a.Winner.Username : null,
                 ItemName = a.Item.Name,
                 Bids = a.Bids
             }).ToListAsync();
->>>>>>> Stashed changes
         }
 
-        public async Task<Auction?> GetAuction(int id)
+        public async Task<AuctionDto?> GetAuction(int id)
         {
-<<<<<<< Updated upstream
-            return await context.Auctions.FindAsync(id);
-=======
             return await context.Auctions.Where(a => a.Id == id).Select(a => new AuctionDto
             {
                 Id= a.Id,
@@ -87,7 +82,6 @@ namespace Basic_Crud.Services
             await context.SaveChangesAsync();
 
             return (auction, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold);
->>>>>>> Stashed changes
         }
     }
 }
