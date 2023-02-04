@@ -20,9 +20,9 @@ namespace Basic_Crud.Controllers
         [HttpGet]
         public async Task<ActionResult<User>> GetUserDetails()
         {
-            var res = await service.GetUserDetails();
+            (User? user, bool loggedIn, bool userExist) = await service.GetUserDetails();
 
-            return Response(res);
+            return ResponseToClient(user, loggedIn, userExist);
         }
 
         [HttpPut("update-details")]
@@ -31,37 +31,39 @@ namespace Basic_Crud.Controllers
             bool usernameAvailable = await service.IsUsernameAvailable(userUpdateDto.Username);
             if (!usernameAvailable) return BadRequest("Username is not available.");
 
-            var res = await service.UpdateUser(userUpdateDto);
+            (User? user, bool loggedIn, bool userExist) = await service.UpdateUser(userUpdateDto);
 
-            return Response(res);
+            return ResponseToClient(user, loggedIn, userExist);
         }
 
         [HttpPut("update-password")]
         public async Task<ActionResult<User>> UpdatePassword(UserUpdatePassowrd userUpdate)
         {
-            var res = await service.UpdatePassword(userUpdate);
+            if (userUpdate.Password != userUpdate.ConfirmPassword) return BadRequest("Password and Confirm Password does not match");
 
-            return Response(res);
+            (User? user, bool loggedIn, bool userExist) = await service.UpdatePassword(userUpdate);
+
+            return ResponseToClient(user, loggedIn, userExist);
         }
 
-        private ActionResult<User> Response(Tuple<User?, bool> user)
+        private ActionResult<User> ResponseToClient(User? user, bool loggedIn, bool userExist)
         {
-            if (user.Item2 == false) return Unauthorized("Could not verify token. Please log in again to perform this action!");
+            if (!loggedIn) return Unauthorized("Could not verify token. Please log in again to perform this action!");
 
-            if (user.Item1 == null) return NotFound("User does not exist!");
+            if (!userExist) return NotFound("User does not exist!");
 
-            return Ok(user.Item1);
+            return Ok(user);
         }
 
         [HttpGet("/items")]
         public async Task<ActionResult<List<Category>>> GetUserItems()
         {
-            var res = await service.GetUserItems();
+            (List<Item> items, bool loggedIn, bool userExist) = await service.GetUserItems();
 
-            if (res.Item2 == false) return Unauthorized("Please make sure you are logged in before performing this action!");
-            if (res.Item3 == false) return NotFound("User not found!");
+            if (!loggedIn) return Unauthorized("Please make sure you are logged in before performing this action!");
+            if (!userExist) return NotFound("User not found!");
 
-            return Ok(res.Item1);
+            return Ok(items);
         }
     }
 }

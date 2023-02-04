@@ -20,10 +20,8 @@ namespace Basic_Crud.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Item>>> GetAll()
-        {
-            return Ok(await service.GetAll());
-        }
+        public async Task<ActionResult<List<Item>>> GetAll() => Ok(await service.GetAll());
+        
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetAnItem([FromRoute] int id)
@@ -39,13 +37,13 @@ namespace Basic_Crud.Controllers
         [HttpPost]
         public async Task<ActionResult<Item>> CreateItem(ItemDto itemReq)
         {
-            var res = await service.CreateItem(itemReq);
+            (Item? Item, bool loggedIn, bool userExists, bool categoryExists) = await service.CreateItem(itemReq);
             
-            if (res.Item4 == false) return Unauthorized("Please make sure you are logged in before performing this action");
-            if (res.Item2 == false) return NotFound("User does not exist!");
-            if (res.Item3 == false) return NotFound("Category does not exist!");
+            if (!loggedIn) return Unauthorized("Please make sure you are logged in before performing this action");
+            if (!userExists) return NotFound("User does not exist!");
+            if (!categoryExists) return NotFound("Category does not exist!");
 
-            return Ok(res.Item1);
+            return Ok(Item);
         }
     }
 }

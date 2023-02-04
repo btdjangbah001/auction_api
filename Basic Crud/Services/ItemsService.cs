@@ -1,20 +1,17 @@
 ﻿using Basic_Crud.Data;
 using Basic_Crud.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace Basic_Crud.Services
 {
     public class ItemsService
     {
         private readonly AppDBContext context;
-        private readonly IHttpContextAccessor httpContext;
         private readonly UtilityService utilityService;
 
-        public ItemsService(AppDBContext context, IHttpContextAccessor httpContext, UtilityService utilityService)
+        public ItemsService(AppDBContext context, UtilityService utilityService)
         {
             this.context = context;
-            this.httpContext = httpContext;
             this.utilityService = utilityService;
         }
 
@@ -40,51 +37,32 @@ namespace Basic_Crud.Services
             return await context.Items.FindAsync(id);
         }
 
-        public async Task<Tuple<Item?, bool, bool, bool>?> CreateItem(ItemDto itemDto)
+        public async Task<(Item?, bool, bool, bool)> CreateItem(ItemDto itemDto)
         {
-            string? loggedInUsername = null;
+            bool categoryExists = false;
 
-            if (httpContext.HttpContext != null) loggedInUsername = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            (User? user, bool loggedIn, bool userExists) = await utilityService.GetLoggedInUserDetails();
 
-            if (string.IsNullOrWhiteSpace(loggedInUsername)) return new Tuple<Item?, bool, bool, bool>(null, false, false, false);
-
-            var user = await context.Users.Where(u => u.Username == loggedInUsername).FirstOrDefaultAsync();
-
-            var userExists = true;
-
-            if (user == null)
-            {
-                userExists = false;
-            }
+            if (!loggedIn || !userExists) return (null, loggedIn, userExists, categoryExists);
 
             var category = await context.Categories.Where(c => c.Name == itemDto.Category).FirstOrDefaultAsync();
 
-            var categoryExists = true;
+            if (category == null) return (null, loggedIn, userExists, categoryExists);
+            categoryExists = true;
 
-            if (category == null)
+            Item? item = new Item
             {
-                categoryExists = false;
-            }
+                Name = itemDto.Name,
+                Owner = user!,
+                Category = category,
+                Description = itemDto.Description,
+                Created = DateTime.UtcNow,
+            };
 
+            await context.Items.AddAsync(item);
+            await context.SaveChangesAsync();
 
-            Item? item = null;
-
-            if (userExists && categoryExists)
-            {
-                item = new Item
-                {
-                    Name = itemDto.Name,
-                    Owner = user,
-                    Category = category,
-                    Description = itemDto.Description,
-                    Created = DateTime.UtcNow,
-                };
-
-                await context.Items.AddAsync(item);
-                await context.SaveChangesAsync();
-            }
-
-            return new Tuple<Item?, bool, bool, bool>(item, userExists, categoryExists, true);
+            return (item, loggedIn, userExists, categoryExists);
         }
     }
 }

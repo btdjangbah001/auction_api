@@ -19,10 +19,7 @@ namespace Basic_Crud.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Auction>>> GetAll()
-        {
-            return Ok(await service.GetAll());
-        }
+        public async Task<ActionResult<List<Auction>>> GetAll() => Ok(await service.GetAll());
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Auction>> GetAuction([FromRoute] int id)
@@ -30,9 +27,7 @@ namespace Basic_Crud.Controllers
             var auction = await service.GetAuction(id); 
 
             if (auction == null)
-            {
                 return NotFound("Auction with id " + id + " does not exist!");
-            }
 
             return Ok(auction);
         }

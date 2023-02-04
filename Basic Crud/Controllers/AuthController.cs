@@ -42,11 +42,15 @@ namespace Basic_Crud.Controllers
             return Ok(res);
         }
 
-        [HttpPost("refresh-token")]
+        [HttpGet("refresh-token")]
         public async Task<ActionResult<string>> RefreshToken()
         {
-            var res = await auth.RefreshToken(Request, Response);
-            return Ok(string.Empty);
+            (User? user, bool loggedIn, bool userExists, bool validToken, bool tokenNotExpired, string token) = await auth.RefreshToken(Request, Response);
+            if (!loggedIn) return Unauthorized("Please log in again to perform this action");
+            if (!userExists) return NotFound("User does not exists!");
+            if (!validToken) return Unauthorized("The refresh token is not valid, please log in again");
+            if (!tokenNotExpired) return Unauthorized("Your token is expired!");
+            return Ok(token);
         }
     }
 }

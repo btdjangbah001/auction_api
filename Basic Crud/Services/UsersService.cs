@@ -15,32 +15,18 @@ namespace Basic_Crud.Services
             this.utilityService = utilityService;
         }
 
-        public async Task<Tuple<User?, bool>> GetUserDetails()
+        public async Task<(User?, bool, bool)> GetUserDetails()
         {
-            string? username = null;
-            bool userFound = true;
-            User? user = null;
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
 
-            username = utilityService.GetLoggedInUser();
-
-            if (string.IsNullOrWhiteSpace(username)) userFound = false;
-            else user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
-
-            return new Tuple<User?, bool>(user, userFound);
+            return (user, loggedIn, userExist);
         }
 
-        public async Task<Tuple<User?, bool>> UpdateUser(UserUpdateDto userUpdateDto)
+        public async Task<(User?, bool, bool)> UpdateUser(UserUpdateDto userUpdateDto)
         {
-            string? loggedInUser = null;
-            bool userFound = true;
-            User? user = null;
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
 
-            loggedInUser = utilityService.GetLoggedInUser();
-
-            if (string.IsNullOrWhiteSpace(loggedInUser)) userFound = false;
-            else user =await context.Users.Where(u => u.Username == loggedInUser).FirstOrDefaultAsync();
-
-            if (user == null) return new Tuple<User?, bool>(user, userFound);
+            if (!loggedIn || !userExist || user == null) return (user, loggedIn, userExist);
 
             if (userUpdateDto.Username != null) user.Username = userUpdateDto.Username;
 
@@ -49,23 +35,14 @@ namespace Basic_Crud.Services
             context.Users.Update(user);
             context.SaveChanges();
 
-            return new Tuple<User?, bool>(user, userFound);
+            return (user, loggedIn, userExist);
         }
 
-        public async Task<Tuple<User?, bool>> UpdatePassword(UserUpdatePassowrd updatePassowrd)
+        public async Task<(User?, bool, bool)> UpdatePassword(UserUpdatePassowrd updatePassowrd)
         {
-            if (updatePassowrd.Password != updatePassowrd.ConfirmPassword) return null;
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
 
-            bool loggedInUser = true;
-            User? user = null;
-
-            string? username = utilityService.GetLoggedInUser();
-
-            if (username == null) return new Tuple<User?, bool>(user, loggedInUser);
-
-            user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
-
-            if (user == null) return new Tuple<User?, bool>(user, loggedInUser);
+            if (user == null) return (user, loggedIn, userExist);
 
             utilityService.CreatePassword(updatePassowrd.Password, out byte[] salt, out byte[] hash);
 
@@ -75,7 +52,7 @@ namespace Basic_Crud.Services
             context.Users.Update(user);
             context.SaveChanges();
 
-            return new Tuple<User?, bool>(user, loggedInUser);
+            return (user, loggedIn, userExist);
         }
 
         public async Task<bool> IsUsernameAvailable(string? username)
@@ -98,30 +75,14 @@ namespace Basic_Crud.Services
             return user != null;
         }
 
-        public async Task<Tuple<List<Item>?, bool, bool>> GetUserItems()
+        public async Task<(List<Item>, bool, bool)> GetUserItems()
         {
-            var userLoggedIn = true;
-            var userExists = true;
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
+            if (!loggedIn || !userExist || user == null) return (new List<Item>(), loggedIn, userExist);
 
-            var username = utilityService.GetLoggedInUser();
-            if (username == null)
-            {
-                userLoggedIn = false;
-                return new Tuple<List<Item>?, bool, bool>(null, userLoggedIn, false);
-            }
+            var items = await context.Items.Where(i => i.Owner == user).ToListAsync();
 
-            var user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
-            if (user == null)
-            {
-                userExists = false;
-                return new Tuple<List<Item>?, bool, bool>(null, userLoggedIn, userExists);
-            }
-
-            var item = await context.Items.Where(i => i.Owner == user).ToListAsync();
-
-            if (item == null) item = new List<Item> { };
-
-            return new Tuple<List<Item>?, bool, bool>(item, userLoggedIn, userExists);
+            return (items, loggedIn, userExist);
         }
     }
 }

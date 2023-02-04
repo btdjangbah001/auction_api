@@ -27,7 +27,7 @@ namespace Basic_Crud.Services
             }
         }
 
-        public string? GetLoggedInUser()
+        private string? GetLoggedInUser()
         {
             string? username = null;
             if (httpContext.HttpContext != null) username = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.Name);

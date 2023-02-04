@@ -61,45 +61,30 @@ namespace Basic_Crud.Services
             return CreateToken(user);
         }
 
-        public async Task<Tuple<User?, bool, bool, bool, bool>> RefreshToken(HttpRequest request, HttpResponse response)
+        public async Task<(User?, bool, bool, bool, bool, string)> RefreshToken(HttpRequest request, HttpResponse response)
         {
             var refreshToken = request.Cookies["refreshToken"];
-            var username = utilityService.GetLoggedInUser();
-            bool userIsLoggedIn = true;
-            bool userExists = true;
-            bool validToken = true;
-            bool tokenNotExpired = true;
+            bool validToken = false;
+            bool tokenNotExpired = false;
 
-            User? user = null;
+            (User? user, bool loggedIn, bool userExists) = await utilityService.GetLoggedInUserDetails();
 
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                userIsLoggedIn = false;
-                return new Tuple<User?, bool, bool, bool, bool>(null, userIsLoggedIn, false, false, false);
-            }
-            else user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
+            if (!loggedIn || !userExists || user == null)
+                return (user, loggedIn, userExists, validToken, tokenNotExpired, String.Empty);
 
-            if (user == null)
-            {
-                userExists = false;
-                return new Tuple<User?, bool, bool, bool, bool>(null, userIsLoggedIn, userExists, false, false);
-            }
             if (!user.RefreshToken.Equals(refreshToken))
-            {
-                validToken = false;
-                return new Tuple<User?, bool, bool, bool, bool>(user, userIsLoggedIn, userExists, validToken, false);
-            }
-            else if (user.TokenExpires < DateTime.UtcNow)
-            {
-                tokenNotExpired = false;
-                return new Tuple<User?, bool, bool, bool, bool>(user, userIsLoggedIn, userExists, validToken, tokenNotExpired);
-            }
+                return (user, loggedIn, userExists, validToken, tokenNotExpired, String.Empty);
+            validToken = true;
+
+            if (user.TokenExpires < DateTime.UtcNow)
+                return (user, loggedIn, userExists, validToken, tokenNotExpired, String.Empty);
+            tokenNotExpired = true;
 
             var token = CreateToken(user);
             var refToken = GenerateRefreshToken();
             SetRefreshToken(refToken, response, user);
 
-            return new Tuple<User?, bool, bool, bool, bool>(user, userIsLoggedIn, userExists, validToken, tokenNotExpired);
+            return (user, loggedIn, userExists, validToken, tokenNotExpired, token);
         }
 
         string CreateToken(User user)
