@@ -9,4 +9,10 @@ namespace Basic_Crud.Models
         public string Bidder { get; set; }
         public Auction Auction { get; set; }
     }
+
+    public class CreateBid
+    {
+        public double Amount { get; set; }
+        public int AuctionId { get; set; }
+    }
 }

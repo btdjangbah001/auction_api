@@ -14,14 +14,12 @@ namespace Basic_Crud.Services
     {
         private readonly AppDBContext context;
         private readonly IConfiguration configuration;
-        private readonly UsersService usersService;
         private readonly UtilityService utilityService;
 
-        public AuthService(AppDBContext context, IConfiguration configuration, UsersService usersService, UtilityService utilityService)
+        public AuthService(AppDBContext context, IConfiguration configuration, UtilityService utilityService)
         {
             this.context = context;
             this.configuration = configuration;
-            this.usersService = usersService;
             this.utilityService = utilityService;
         }
 
