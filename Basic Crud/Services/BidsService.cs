@@ -1,4 +1,7 @@
 ﻿using Basic_Crud.Data;
+using Basic_Crud.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Basic_Crud.Services
 {
@@ -11,6 +14,17 @@ namespace Basic_Crud.Services
         {
             this.context = context;
             this.utilityService = utilityService;
+        }
+
+        public async Task<List<BidDto>> GetAllBids()
+        {
+            return await context.Bids.Select(b => new BidDto
+            {
+                Id = b.Id,
+                Amount = b.Amount,
+                Bidder = b.User.Username,
+                Auction = b.Auction,
+            }).ToListAsync();
         }
     }
 }
