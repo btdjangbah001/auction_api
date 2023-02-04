@@ -36,5 +36,18 @@ namespace Basic_Crud.Controllers
 
             return Ok(auction);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuction auctionDto)
+        {
+            (Auction? auction, bool loggedIn, bool userExist, bool itemExists, bool userOwnsItem, bool itemNotSold) 
+                = await service.CreateAuction(auctionDto);
+            if (!loggedIn) return Unauthorized("Please log in again to perform this action");
+            if (!userExist) return NotFound("This user does not exists!");
+            if (!itemExists) return NotFound("This item with id " + auctionDto.ItemId + " does not exists!");
+            if (!userOwnsItem) return Unauthorized("Item with id " + auctionDto.ItemId + " does not belong to you!");
+            if (!itemNotSold) return Unauthorized("You cannot auction off an item that has already been sold.");
+            return Ok(auction);
+        }
     }
 }

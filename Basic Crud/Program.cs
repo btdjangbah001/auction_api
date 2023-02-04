@@ -55,6 +55,8 @@ builder.Services.AddScoped<UsersService>();
 
 builder.Services.AddScoped<AuctionController>();
 
+builder.Services.AddScoped<BidsService>();
+
 builder.Services.AddHttpContextAccessor();
 
 // Ignores cycles

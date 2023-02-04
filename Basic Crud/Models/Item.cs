@@ -8,7 +8,6 @@
         public string Description { get; set; }
         public Boolean Sold { get; set; }
         public DateTime Created { get; set; }
-        public int CategoryId { get; set; }
         public Category Category { get; set; }
         public ICollection<Auction> Auctions { get; set; }
     }
