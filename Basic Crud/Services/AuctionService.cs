@@ -47,33 +47,41 @@ namespace Basic_Crud.Services
 
         public async Task<(Auction?, bool, bool, bool, bool, bool, bool)> CreateAuction(CreateAuction auctionDto)
         {
-            string? loggedInUser = utilityService.GetLoggedInUser();
-            User? user = null;
             Item? item = null;
-            bool loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction;
-            loggedIn = userExist = itemExists = userOwnsItem = itemNotSold = itemHasOpenedAuction = false;
+            bool itemExists, userOwnsItem, itemSold, itemHasOpenedAuction;
+            itemExists = userOwnsItem = itemSold = itemHasOpenedAuction = false;
 
-            if (loggedInUser == null) return (null, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
-            loggedIn = true;
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
 
-            user = await context.Users.Where(q => q.Username == loggedInUser).FirstOrDefaultAsync();
+            if (loggedIn == false) 
+                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
+
+            if (userExist == false) 
+                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
+
             item = await context.Items.FindAsync(auctionDto.ItemId);
 
-            if (user == null) return (null, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
-            userExist = true;
-            if (item == null) return (null, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
+            if (item == null) 
+                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
             itemExists = true;
-            if (user.Id != item.Owner.Id) return (null, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
+
+            if (user!.Id != item.Owner.Id) 
+                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
             userOwnsItem = true;
-            if (item.Sold) return (null, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
-            itemNotSold = true;
+
+            if (item.Sold)
+            {
+                itemSold = true;
+                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
+
+            } 
 
             Auction? openedAuction = await context.Auctions.Where(a => a.Item.Id == item.Id && a.EndDate > DateTime.UtcNow).FirstOrDefaultAsync();
             if (openedAuction != null)
             {
                 itemHasOpenedAuction = true;
-                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
-            }
+                return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
+            }   
 
 
             var auction = new Auction
@@ -89,7 +97,63 @@ namespace Basic_Crud.Services
             await context.Auctions.AddAsync(auction);
             await context.SaveChangesAsync();
 
-            return (auction, loggedIn, userExist, itemExists, userOwnsItem, itemNotSold, itemHasOpenedAuction);
+            return (auction, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
+        }
+
+        public async Task<(AuctionDto?, bool, bool, bool, bool, bool)> DeleteAuction(int id)
+        {
+            Auction? auction = null;
+            bool auctionExists, userOwnsItem, itemSold;
+            auctionExists = userOwnsItem = itemSold = false;
+
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
+
+            if (loggedIn == false)
+                return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
+
+            if (userExist == false)
+                return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
+
+            auction = await context.Auctions.Where(a => a.Id == id).Select(a => new Auction
+            {
+                Id = a.Id,
+                StartDate = a.StartDate,
+                EndDate = a.EndDate,
+                SoldDate = a.SoldDate,
+                Winner = a.Winner,
+                Item = a.Item,
+                Bids = a.Bids,
+            }).FirstAsync();
+
+            if (auction == null)
+                return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
+            auctionExists = true;
+
+            if (auction.Item.OwnerId != user!.Id)
+                return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
+            userOwnsItem = true;
+
+            if (auction.Item.Sold)
+            {
+                itemSold = true;
+                return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
+
+            }
+
+            context.Auctions.Attach(auction);
+            context.Auctions.Remove(auction);
+            await context.SaveChangesAsync();
+
+            return (new AuctionDto
+            {
+                Id = auction.Id,
+                StartDate = auction.StartDate,
+                EndDate = auction.EndDate,
+                Price = auction.Price,
+                ItemId = auction.Item.Id,
+                ItemName = auction.Item.Name,
+                Bids = auction.Bids,
+            }, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
         }
     }
 }

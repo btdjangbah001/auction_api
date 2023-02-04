@@ -29,20 +29,18 @@ namespace Basic_Crud.Services
 
         public  async Task<(Bid?, bool, bool, bool, bool)> MakeBid(CreateBid bidDto)
         {
-            string? loggedInUser = utilityService.GetLoggedInUser();
-            User? user = null;
             Auction? auction = null;
 
-            bool loggedIn, userExists, auctionExists, auctionNotExpired; 
-            loggedIn = userExists = auctionExists = auctionNotExpired = false;
+            bool auctionExists, auctionNotExpired; 
+            auctionExists = auctionNotExpired = false;
 
-            if (loggedInUser == null) return (null, loggedIn, userExists, auctionExists, auctionNotExpired);
-            loggedIn = true;
+            (User? user, bool loggedIn, bool userExists) = await utilityService.GetLoggedInUserDetails();
 
-            user = await context.Users.Where(u => u.Username == loggedInUser).FirstOrDefaultAsync();
+            if (loggedIn == false) 
+                return (null, loggedIn, userExists, auctionExists, auctionNotExpired);
 
-            if (user == null) return (null, loggedIn, userExists, auctionExists, auctionNotExpired);
-            userExists = true;
+            if (userExists == false) 
+                return (null, loggedIn, userExists, auctionExists, auctionNotExpired);
 
             auction = await context.Auctions.FindAsync(bidDto.AuctionId);
 
@@ -55,7 +53,7 @@ namespace Basic_Crud.Services
             Bid bid = new Bid
             {
                 Amount = bidDto.Amount,
-                User = user,
+                User = user!,
                 Auction = auction,
             };
 
