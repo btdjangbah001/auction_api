@@ -24,7 +24,7 @@ namespace Basic_Crud.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Auction>> GetAuction([FromRoute] int id)
         {
-            var auction = await service.GetAuction(id); 
+            AuctionDto? auction = await service.GetAuction(id); 
 
             if (auction == null)
                 return NotFound("Auction with id " + id + " does not exist!");
@@ -58,6 +58,12 @@ namespace Basic_Crud.Controllers
             if (!userOwnsAuction) return BadRequest("Auction with id " + id + " does not belong to you!");
             if (itemSold) return BadRequest("This auction has already been sold and closed");
             return Ok(auction);
+        }
+
+        [HttpGet("{id}/Bids")]
+        public async Task<ActionResult<List<Bid>>> GetAuctionBid([FromRoute] int id)
+        {
+            return Ok(await service.GetAuctionBids(id));
         }
     }
 }

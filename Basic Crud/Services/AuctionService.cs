@@ -155,5 +155,10 @@ namespace Basic_Crud.Services
                 Bids = auction.Bids,
             }, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
         }
+
+        public async Task<List<Bid>> GetAuctionBids(int id)
+        {
+            return await context.Bids.Where(b => b.Auction.Id == id).ToListAsync();
+        }
     }
 }

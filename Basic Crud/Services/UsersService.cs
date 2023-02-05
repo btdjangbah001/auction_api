@@ -84,5 +84,12 @@ namespace Basic_Crud.Services
 
             return (items, loggedIn, userExist);
         }
+
+        public async Task<List<Auction>> GetUserAuctions()
+        {
+            (User? user, bool loggedIn, bool userExist) = await utilityService.GetLoggedInUserDetails();
+
+            return await context.Auctions.Where(a => a.Item.OwnerId == user.Id).ToListAsync();
+        }
     }
 }

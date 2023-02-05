@@ -1,5 +1,6 @@
 ﻿using Basic_Crud.Models;
 using Basic_Crud.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -43,6 +44,7 @@ namespace Basic_Crud.Controllers
         }
 
         [HttpGet("refresh-token")]
+        [Authorize]
         public async Task<ActionResult<string>> RefreshToken()
         {
             (User? user, bool loggedIn, bool userExists, bool validToken, bool tokenNotExpired, string token) = await auth.RefreshToken(Request, Response);

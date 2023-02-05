@@ -65,5 +65,11 @@ namespace Basic_Crud.Controllers
 
             return Ok(items);
         }
+
+        [HttpGet("/auctions")]
+        public async Task<ActionResult<Auction>> GetUserAuctions()
+        {
+            return Ok(new List<Auction>());
+        }
     }
 }
