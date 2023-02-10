@@ -1,5 +1,6 @@
 ﻿using Basic_Crud.Data;
 using Basic_Crud.Models;
+using Basic_Crud.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Basic_Crud.Services
@@ -7,11 +8,13 @@ namespace Basic_Crud.Services
     public class UsersService
     {
         private readonly AppDBContext context;
+        private readonly UserRepository userRepo;
         private readonly UtilityService utilityService;
 
-        public UsersService(AppDBContext context, UtilityService utilityService)
+        public UsersService(AppDBContext context, UserRepository userRepo, UtilityService utilityService)
         {
             this.context = context;
+            this.userRepo = userRepo;
             this.utilityService = utilityService;
         }
 
@@ -32,8 +35,7 @@ namespace Basic_Crud.Services
 
             if (userUpdateDto.Email != null) user.Email = userUpdateDto.Email;
 
-            context.Users.Update(user);
-            context.SaveChanges();
+            userRepo.UpdateUser(user);
 
             return (user, loggedIn, userExist);
         }
@@ -49,8 +51,7 @@ namespace Basic_Crud.Services
             user.PasswordSalt = salt;
             user.PasswordHash = hash;
 
-            context.Users.Update(user);
-            context.SaveChanges();
+            userRepo.UpdateUser(user);
 
             return (user, loggedIn, userExist);
         }
@@ -70,7 +71,7 @@ namespace Basic_Crud.Services
 
         private async Task<bool> UsernameExists(string username)
         {
-            var user = await context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
+            var user = await userRepo.FindOneByUsername(username);
 
             return user != null;
         }

@@ -9,6 +9,7 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text.Json.Serialization;
 using System.Net;
 using Basic_Crud.Controllers;
+using Basic_Crud.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,20 +44,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<AuctionRepository>();
+builder.Services.AddScoped<BidRepository>();
+builder.Services.AddScoped<CategoryRepository>();
+builder.Services.AddScoped<ItemRepository>();
 builder.Services.AddScoped<UtilityService>();
-
 builder.Services.AddScoped<AuthService>();
-
 builder.Services.AddScoped<ItemsService>();
-
 builder.Services.AddScoped<CategoriesService>();
-
 builder.Services.AddScoped<UsersService>();
-
 builder.Services.AddScoped<AuctionService>();
-
 builder.Services.AddScoped<BidsService>();
-
 builder.Services.AddScoped<BidsService>();
 
 builder.Services.AddHttpContextAccessor();

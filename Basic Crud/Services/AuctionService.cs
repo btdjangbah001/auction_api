@@ -1,5 +1,6 @@
 ﻿using Basic_Crud.Data;
 using Basic_Crud.Models;
+using Basic_Crud.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Basic_Crud.Services
@@ -7,42 +8,24 @@ namespace Basic_Crud.Services
     public class AuctionService
     {
         private readonly AppDBContext context;
+        private readonly AuctionRepository auctionRepo;
         private readonly UtilityService utilityService;
 
-        public AuctionService(AppDBContext context, UtilityService utilityService)
+        public AuctionService(AppDBContext context,AuctionRepository auctionRepo , UtilityService utilityService)
         {
             this.context = context;
+            this.auctionRepo = auctionRepo;
             this.utilityService = utilityService;
         }
 
         public async Task<List<AuctionDto>> GetAll()
         {
-            return await context.Auctions.Select(a => new AuctionDto
-            {
-                Id = a.Id,
-                StartDate = a.StartDate,
-                EndDate = a.EndDate,
-                SoldDate = a.SoldDate,
-                Price = a.Price,
-                UserName = a.Winner != null ? a.Winner.Username : null,
-                ItemName = a.Item.Name,
-                Bids = a.Bids
-            }).ToListAsync();
+            return await auctionRepo.FindAll();
         }
 
         public async Task<AuctionDto?> GetAuction(int id)
         {
-            return await context.Auctions.Where(a => a.Id == id).Select(a => new AuctionDto
-            {
-                Id= a.Id,
-                StartDate = a.StartDate,
-                EndDate = a.EndDate,
-                SoldDate = a.SoldDate,
-                Price = a.Price,
-                UserName = a.Winner != null ? a.Winner.Username : null,
-                ItemName = a.Item.Name,
-                Bids = a.Bids
-            }).FirstOrDefaultAsync();
+            return await auctionRepo.FindOneById(id);
         }
 
         public async Task<(Auction?, bool, bool, bool, bool, bool, bool)> CreateAuction(CreateAuction auctionDto)
@@ -74,9 +57,9 @@ namespace Basic_Crud.Services
                 itemSold = true;
                 return (null, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
 
-            } 
+            }
 
-            Auction? openedAuction = await context.Auctions.Where(a => a.Item.Id == item.Id && a.EndDate > DateTime.UtcNow).FirstOrDefaultAsync();
+            Auction? openedAuction = await auctionRepo.FindOpenedAuctionForItem(item.Id);
             if (openedAuction != null)
             {
                 itemHasOpenedAuction = true;
@@ -94,8 +77,7 @@ namespace Basic_Crud.Services
                 Bids = new List<Bid>(),
             };
 
-            await context.Auctions.AddAsync(auction);
-            await context.SaveChangesAsync();
+            auctionRepo.SaveOne(auction);
 
             return (auction, loggedIn, userExist, itemExists, userOwnsItem, itemSold, itemHasOpenedAuction);
         }
@@ -114,16 +96,7 @@ namespace Basic_Crud.Services
             if (userExist == false)
                 return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
 
-            auction = await context.Auctions.Where(a => a.Id == id).Select(a => new Auction
-            {
-                Id = a.Id,
-                StartDate = a.StartDate,
-                EndDate = a.EndDate,
-                SoldDate = a.SoldDate,
-                Winner = a.Winner,
-                Item = a.Item,
-                Bids = a.Bids,
-            }).FirstAsync();
+            auction = await auctionRepo.FindAuctionById(id);
 
             if (auction == null)
                 return (null, loggedIn, userExist, auctionExists, userOwnsItem, itemSold);
@@ -140,9 +113,7 @@ namespace Basic_Crud.Services
 
             }
 
-            context.Auctions.Attach(auction);
-            context.Auctions.Remove(auction);
-            await context.SaveChangesAsync();
+            auctionRepo.DeleteAuction(auction);
 
             return (new AuctionDto
             {
@@ -158,7 +129,7 @@ namespace Basic_Crud.Services
 
         public async Task<List<Bid>> GetAuctionBids(int id)
         {
-            return await context.Bids.Where(b => b.Auction.Id == id).ToListAsync();
+            return await auctionRepo.GetAuctionBids(id);
         }
     }
 }

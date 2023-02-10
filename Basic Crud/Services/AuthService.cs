@@ -7,25 +7,26 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http;
+using Basic_Crud.Repositories;
 
 namespace Basic_Crud.Services
 {
     public class AuthService
     {
-        private readonly AppDBContext context;
         private readonly IConfiguration configuration;
+        private readonly UserRepository userRepo;
         private readonly UtilityService utilityService;
 
-        public AuthService(AppDBContext context, IConfiguration configuration, UtilityService utilityService)
+        public AuthService(IConfiguration configuration,UserRepository userRepo, UtilityService utilityService)
         {
-            this.context = context;
             this.configuration = configuration;
+            this.userRepo = userRepo;
             this.utilityService = utilityService;
         }
 
         public async Task<User?> RegisterUser(UserDto userReq)
         {
-            var existingUser = await context.Users.Where(u => u.Username == userReq.Username).FirstOrDefaultAsync();
+            var existingUser = await userRepo.FindOneByUsername(userReq.Username);
 
             if (existingUser != null)
                 return null;
@@ -39,15 +40,14 @@ namespace Basic_Crud.Services
             user.PasswordSalt = salt;
             user.PasswordHash = hash;
 
-            await context.AddAsync(user);
-            await context.SaveChangesAsync();
+            await userRepo.SaveUser(user);
 
             return user;
         }
 
         public async Task<string?> LoginUser(UserLogin userLogin, HttpResponse response)
         {
-            var user = await context.Users.Where(x => x.Username == userLogin.Username).FirstOrDefaultAsync();
+            var user = await userRepo.FindOneByUsername(userLogin.Username);
             
             if (user == null)
                 return null;
@@ -142,8 +142,7 @@ namespace Basic_Crud.Services
             user.TokenCreated = refreshToken.Created;
             user.TokenExpires = refreshToken.Expires;
 
-            context.Users.Update(user);
-            context.SaveChanges();
+            userRepo.UpdateUser(user);
         }
     }
 }
